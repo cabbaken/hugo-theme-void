@@ -41,7 +41,7 @@
   {{ partial "head/css.html" . }}
   {{ partial "head/js.html" . }}
 {{ else }}
-  {{ partialCached "head/css.html" . }}
+  {{ partial "head/css.html" . }}
   {{ partialCached "head/js.html" . }}
 {{ end }}
 

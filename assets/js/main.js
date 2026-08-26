@@ -11,57 +11,8 @@ document.addEventListener("DOMContentLoaded", function () {
   // 修复可能存在的 ID 问题
   fixFootnoteIds();
 
-  // 查找所有脚注返回链接
-  const backRefs = document.querySelectorAll(".footnote-backref");
-
-  if (backRefs.length > 0) {
-    backRefs.forEach((backref, index) => {
-      // 获取返回链接的 href
-      const href = backref.getAttribute("href");
-      if (!href) return;
-
-      // 使返回链接更明显
-      backref.style.fontWeight = "bold";
-      backref.style.fontSize = "1.2em";
-
-      // 为每个返回链接添加点击事件
-      backref.addEventListener("click", function (e) {
-        e.preventDefault();
-        const targetId = href.substring(1); // 移除 # 符号
-        const targetElement = document.getElementById(targetId);
-
-        if (targetElement) {
-          // 滚动到引用位置
-          targetElement.scrollIntoView({ behavior: "smooth" });
-
-          // 添加突出显示效果
-          targetElement.classList.add("footnote-highlight");
-          setTimeout(() => {
-            targetElement.classList.remove("footnote-highlight");
-          }, 2000);
-        }
-      });
-    });
-  }
-
-  // 处理从文章到脚注的链接
-  const footnoteRefs = document.querySelectorAll(".footnote-ref");
-
-  if (footnoteRefs.length > 0) {
-    footnoteRefs.forEach((ref, index) => {
-      const href = ref.getAttribute("href");
-
-      ref.addEventListener("click", function (e) {
-        e.preventDefault();
-        const targetId = this.getAttribute("href").substring(1);
-        const targetElement = document.getElementById(targetId);
-
-        if (targetElement) {
-          targetElement.scrollIntoView({ behavior: "smooth" });
-        }
-      });
-    });
-  }
+  // Hash navigation, including footnotes, is handled by the delegated
+  // listener in layouts/partials/head/js.html.
 });
 
 // 修复脚注 ID 相关问题

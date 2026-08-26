@@ -22,10 +22,13 @@ Renders a menu for the given menu ID.
   {{- $page := .page }}
   {{- range .menuEntries }}
     {{- $attrs := dict "href" .URL }}
+    {{- $classes := "px-2 py-1 sm:px-3 sm:py-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors" }}
     {{- if $page.IsMenuCurrent .Menu . }}
-      {{- $attrs = merge $attrs (dict "class" "active font-bold" "aria-current" "page") }}
+      {{- $attrs = merge $attrs (dict "aria-current" "page") }}
+      {{- $classes = printf "%s active font-bold" $classes }}
     {{- else if $page.HasMenuCurrent .Menu .}}
-      {{- $attrs = merge $attrs (dict "class" "ancestor font-semibold" "aria-current" "true") }}
+      {{- $attrs = merge $attrs (dict "aria-current" "true") }}
+      {{- $classes = printf "%s ancestor font-semibold" $classes }}
     {{- end }}
     {{- $name := .Name }}
     {{- with .Identifier }}
@@ -35,7 +38,7 @@ Renders a menu for the given menu ID.
     {{- end }}
     <li class="text-gray-600 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white text-base sm:text-lg">
       <a
-        class="px-2 py-1 sm:px-3 sm:py-2 rounded hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+        class="{{ $classes }}"
         {{- range $k, $v := $attrs }}
           {{- with $v }}
             {{- printf " %s=%q" $k $v | safeHTMLAttr }}

@@ -16,6 +16,9 @@
 {{- if and (not $description) .Summary -}}
   {{- $description = .Summary | plainify | htmlUnescape -}}
 {{- end -}}
+{{- if and (not $description) site.Params.description -}}
+  {{- $description = site.Params.description -}}
+{{- end -}}
 {{- if and (not $description) .Content -}}
   {{- $description = .Content | plainify -}}
 {{- end -}}
@@ -81,13 +84,22 @@
 {{- end -}}
 
 {{- $canonicalURL := .Permalink | default site.BaseURL -}}
+{{- if in (slice "section" "term") .Kind -}}
+  {{- with .Paginator -}}
+    {{- if gt .PageNumber 1 -}}
+      {{- $canonicalURL = .URL | absURL -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 {{- $ogType := "website" -}}
-{{- if .IsPage -}}
+{{- $isArticle := and .IsPage (eq (lower .Section) "posts") -}}
+{{- if $isArticle -}}
   {{- $ogType = "article" -}}
 {{- end -}}
-{{- $locale := "en_US" -}}
-{{- if eq site.Language.Lang "zh" -}}
-  {{- $locale = "zh_CN" -}}
+{{- $localeParts := split (replace (or site.Params.locale "zh-cn") "-" "_") "_" -}}
+{{- $locale := index $localeParts 0 -}}
+{{- if and (gt (len $localeParts) 1) (eq (len (index $localeParts 1)) 2) -}}
+  {{- $locale = printf "%s_%s" $locale (upper (index $localeParts 1)) -}}
 {{- end -}}
 
 <link rel="canonical" href="{{ $canonicalURL }}">
@@ -110,7 +122,7 @@
 <meta name="twitter:image" content="{{ . }}">
 {{- end }}
 
-{{- if .IsPage }}
+{{- if $isArticle }}
 <meta property="article:published_time" content="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}">
 <meta property="article:modified_time" content="{{ .Lastmod.Format "2006-01-02T15:04:05Z07:00" }}">
 {{- range .Params.tags }}

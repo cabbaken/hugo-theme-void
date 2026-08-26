@@ -14,14 +14,18 @@
 <!-- JS & Library -->
 <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
-<!-- KaTeX 数学公式支持 -->
+{{- $mathEnabled := site.Params.features.math | default false }}
+{{- if $mathEnabled }}
+<!-- KaTeX math support (opt in with params.features.math) -->
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body);"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+{{- end }}
 
 <!-- 代码块基础功能 -->
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    {{- if $mathEnabled }}
     // 数学公式渲染
     renderMathInElement(document.body, {
       delimiters: [
@@ -30,6 +34,7 @@
       ],
       throwOnError: false
     });
+    {{- end }}
 
     document.querySelectorAll('[data-code-block]').forEach(function(block) {
       const copyButton = block.querySelector('.copy-button');
@@ -51,11 +56,36 @@
         return '';
       }
 
+      function copyCode(text) {
+        if (window.isSecureContext && navigator.clipboard && navigator.clipboard.writeText) {
+          return navigator.clipboard.writeText(text);
+        }
+        // Fallback for HTTP development servers or blocked clipboard permissions.
+        return new Promise(function (resolve, reject) {
+          try {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.setAttribute('readonly', '');
+            ta.style.position = 'fixed';
+            ta.style.top = '-1000px';
+            ta.style.left = '-1000px';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.focus();
+            ta.select();
+            try { ta.setSelectionRange(0, ta.value.length); } catch (_) {}
+            const ok = document.execCommand && document.execCommand('copy');
+            document.body.removeChild(ta);
+            if (ok) resolve(); else reject(new Error('copy failed'));
+          } catch (e) { reject(e); }
+        });
+      }
+
       copyButton.addEventListener('click', function() {
         const code = getCodeText();
         if (!code) return;
 
-        navigator.clipboard.writeText(code).then(function() {
+        copyCode(code).then(function() {
           copyButton.setAttribute('aria-label', 'Copied');
           copyButton.setAttribute('title', 'Copied');
           copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>';
@@ -65,39 +95,7 @@
             copyButton.setAttribute('title', 'Copy code');
             copyButton.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" /></svg>';
           }, 1600);
-        });
-      });
-    });
-  });
-</script>
-<!-- 脚注返回链接支持 -->
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    // 处理脚注返回链接
-    const footnoteBacklinks = document.querySelectorAll('.footnote-backref');
-    
-    footnoteBacklinks.forEach(function(backlink) {
-      backlink.addEventListener('click', function(e) {
-        e.preventDefault();
-        
-        // 获取链接的href属性（格式为 #fnref:1 等）
-        const href = backlink.getAttribute('href');
-        
-        if (href) {
-          // 找到原文引用的元素
-          const target = document.querySelector(href);
-          
-          if (target) {
-            // 滚动到引用位置
-            target.scrollIntoView({ behavior: 'smooth' });
-            
-            // 高亮显示引用位置（可选）
-            target.classList.add('footnote-highlight');
-            setTimeout(function() {
-              target.classList.remove('footnote-highlight');
-            }, 2000);
-          }
-        }
+        }).catch(function() { /* clipboard unavailable: leave button unchanged */ });
       });
     });
   });
